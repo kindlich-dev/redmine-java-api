@@ -35,8 +35,10 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * A parser for JSON items sent by Redmine.
@@ -356,16 +358,25 @@ public final class RedmineJSONParser {
 	}
 
 	public static User parseUser(JSONObject content) throws JSONException {
-		final User result = new User(null).setId(JsonInput.getIntOrNull(content, "id"));
+		final User result = new User(null).setId(JsonInput.getInt(content, "id"));
 		result.setLogin(JsonInput.getStringOrNull(content, "login"));
 		result.setPassword(JsonInput.getStringOrNull(content, "password"));
 		result.setFirstName(JsonInput.getStringOrNull(content, "firstname"));
 		result.setLastName(JsonInput.getStringOrNull(content, "lastname"));
 		result.setMail(JsonInput.getStringOrNull(content, "mail"));
-		result.setAuthSourceId(JsonInput.getIntOrNull(content, "auth_source_id"));
+
+        Stream.of(
+                        Optional.ofNullable(JsonInput.getIntOrNull(content, "auth_source_id")),
+                        Optional.ofNullable(JsonInput.getObjectOrNull(content, "auth_source")).map(o -> o.getInt("id"))
+                ).filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst()
+                .ifPresent(result::setAuthSourceId);
+
 		result.setCreatedOn(getDateOrNull(content, "created_on"));
 		result.setLastLoginOn(getDateOrNull(content, "last_login_on"));
-                result.setApiKey(JsonInput.getStringOrNull(content, "api_key"));
+        //noinspection deprecation
+        result.setApiKey(JsonInput.getStringOrNull(content, "api_key"));
 		result.addCustomFields(JsonInput.getListOrEmpty(content,
 				"custom_fields", RedmineJSONParser::parseCustomField));
 		result.setStatus(JsonInput.getIntOrNull(content, "status"));

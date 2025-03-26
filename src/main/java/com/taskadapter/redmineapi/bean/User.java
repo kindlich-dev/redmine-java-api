@@ -143,11 +143,12 @@ public class User implements Identifiable, FluentStyle {
     }
 
     /**
-     * This value is not returned by redmine on existing users.
-     * 
-     * @return - The Authentication Source ID, if you set it on your own.
+     * Only present if you set it in your own or if the user was fetched with {@code include=auth_source}.
+     * Latter is available since redmine 6.0.0:
+     * <a href="https://github.com/redmine/redmine/commit/479c54bf1df046fa9bb037eb34ce9ab0f39c58f5">GitHub</a>
+     *
+     * @return - The Authentication Source ID, if available
      */
-    @Deprecated
     public Integer getAuthSourceId() {
 		return storage.get(AUTH_SOURCE_ID);
 	}
@@ -281,7 +282,7 @@ public class User implements Identifiable, FluentStyle {
      * </ul>
      *
      * <p>see http://www.redmine.org/projects/redmine/repository/entry/trunk/app/models/principal.rb#L22-25
-     * 
+     *
      * @return possibly Redmine-version-specific number that represents user status (active/locked/etc)
      * @since Redmine REST API 2.4.0
      */
@@ -291,7 +292,7 @@ public class User implements Identifiable, FluentStyle {
 
     /**
      * Sets the user status.
-     * 
+     *
      * @param status {@link #STATUS_ACTIVE}, {@link #STATUS_LOCKED}, etc...
      */
     public User setStatus(Integer status) {
