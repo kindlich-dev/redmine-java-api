@@ -1,16 +1,16 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id 'maven-publish'
     id 'signing'
 }
 
-// 'eclipse' plugin is used to generate native project files for Eclipse
-// from this Gradle script - for those who don't have Gradle plugin installed in Eclipse
-apply plugin: 'eclipse'
-
 group = 'dev.kindlich.com.taskadapter'
 version = '5.0.0.rc1-SNAPSHOT'
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
@@ -50,19 +50,11 @@ dependencies {
 
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
-// A PGP key is required to sign the artifacts before uploading to OSS Sonatype Maven repository.
-// Put the PGP key info in your <home>/.gradle/gradle.properties file:
-// signing.keyId=...
-// signing.password=...
-// signing.secretKeyRingFile=c:/Users/ask/.gnupg/secring.gpg
-signing {
-    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
-}
-
 publishing {
     publications {
-        create("maven", MavenPublication) {
+        mavenJava(MavenPublication) {
+            from components.java
+
             pom {
                 name = 'Redmine Java API'
                 licenses {
@@ -111,19 +103,4 @@ publishing {
             }
         }
     }
-}
-
-tasks.register('packageSources', Jar) {
-    from sourceSets.main.allSource
-    archiveClassifier = 'sources'
-}
-
-tasks.register('packageJavadoc', Jar) {
-    dependsOn 'javadoc'
-    from javadoc.destinationDir
-    archiveClassifier = 'javadoc'
-}
-
-artifacts {
-    archives packageSources, packageJavadoc
 }
